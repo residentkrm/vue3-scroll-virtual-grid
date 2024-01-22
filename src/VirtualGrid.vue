@@ -128,7 +128,7 @@ const displayEnd = computed(() => {
 })
 
 const bottomBound = computed(() => {
-  return innerWrapper.value.offsetTop + wrapperHeight.value - metrics.viewportHeight
+  return /*innerWrapper.value.offsetTop +*/ wrapperHeight.value - metrics.viewportHeight
 })
 
 defineExpose({
