@@ -45,10 +45,16 @@ img {
   fill: $blue;
 }
 
-.wrapper {
+.outer-wrapper {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+.virtual-container {
+  overflow-y: scroll;
+  width: 500px;
+  height: 500px;
 }
 
 .content {

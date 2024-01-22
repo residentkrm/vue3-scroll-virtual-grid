@@ -4,7 +4,8 @@ import VirtualGrid from '../src/VirtualGrid.vue'
 import Post from './Post.vue'
 
 const items = ref([])
-const view = ref('gridview')
+const viewType = ref('gridview')
+const virtualContainer = ref(null);
 const loading = ref(false)
 
 var page = 0
@@ -26,7 +27,7 @@ const loadMore = () => {
 loadMore()
 
 const ToggleView = () => {
-  view.value = view.value == 'gridview' ? 'tableview' : 'gridview'
+  viewType.value = viewType.value === 'gridview' ? 'tableview' : 'gridview'
   grid.value.reset()
 }
 
@@ -40,7 +41,7 @@ const ToggleView = () => {
       <button class="btn" @click="ToggleView()">toggle view</button>
     </p>
 
-    <div :class="view" v-if="items.length > 0">
+    <div :class="viewType" v-if="items.length > 0">
       <div class="tableview__head">
         <div class="tableview__column-main">Post</div>
         <div class="tableview__columns">
@@ -49,14 +50,23 @@ const ToggleView = () => {
           <div>Likes</div>
         </div>
       </div>
-      <VirtualGrid :data="items" @onScrollEnd = "loadMore" ref="grid">
-        <template v-slot:default="{ item, index }">
-          <Post
+
+      <div class="virtual-container" ref="virtualContainer">
+        <VirtualGrid
+          :data="items"
+          ref="grid"
+          :container="virtualContainer"
+          @onScrollEnd = "loadMore"
+          v-if="virtualContainer"
+        >
+          <template v-slot:default="{ item, index }">
+            <Post
               :item="item"
               :index="index"
-          />
-        </template>
-      </VirtualGrid>
+            />
+          </template>
+        </VirtualGrid>
+      </div>
 
       <p class="text-center" v-if="loading"> loading... </p>
     </div>

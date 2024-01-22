@@ -5,13 +5,17 @@ const props = defineProps({
   data: {
     required: true,
     type: Array,
+  },
+  container: {
+    required: true,
+    type: HTMLElement
   }
 })
 
 const emit = defineEmits(['onScrollEnd'])
 
 const pageSize = ref(0)
-const wrapper = ref(null)
+const innerWrapper = ref(null)
 const probeItem = ref(null)
 const probe = ref(null)
 const offsetData = ref(0)
@@ -29,45 +33,61 @@ var lastEmitOn = 0
 var scrollLock = false
 
 onUnmounted(() => {
-  window.removeEventListener('scroll', computeScrollData)
+  props.container.removeEventListener('scroll', computeScrollData)
   window.removeEventListener('resize', reset)
 })
 
 onMounted(() => {
   setMetrics()
-  window.addEventListener('scroll', computeScrollData)
+  props.container.addEventListener('scroll', computeScrollData)
   window.addEventListener('resize', reset)
 })
 
 const setMetrics = () => {
-  var style = getComputedStyle(probe.value)
+  const style = getComputedStyle(probe.value)
 
   metrics.gapY = parseFloat(style.rowGap)
   metrics.gapX = parseFloat(style.columnGap)
   metrics.itemWidth = probeItem.value.offsetWidth
   metrics.itemHeight = probeItem.value.offsetHeight
-  metrics.columnsCount = Math.round ( (probe.value.offsetWidth + metrics.gapX) / (metrics.itemWidth + metrics.gapX) )
-  metrics.viewportHeight = window.innerHeight
+  metrics.columnsCount = Math.round (
+    (probe.value.offsetWidth + metrics.gapX) / (metrics.itemWidth + metrics.gapX)
+  )
+  //metrics.viewportHeight = props.container.offsetHeight;
+  metrics.viewportHeight = props.container.clientHeight;
 
   setMinPageSize()
   computeScrollData()
 }
 
 const setMinPageSize = () => {
-  var minItems = (Math.ceil(metrics.viewportHeight / (metrics.itemHeight + metrics.gapY)) + 3) * metrics.columnsCount
+  const minItems = (
+    Math.ceil(
+      metrics.viewportHeight / (metrics.itemHeight + metrics.gapY)) + 3
+  ) * metrics.columnsCount
+
   pageSize.value = Math.max(minItems, pageSize.value)
 }
 
 const computeScrollData = () => {
   if (scrollLock) return;
 
-  offsetData.value = Math.floor( (window.pageYOffset - wrapper.value.offsetTop - 50) / (metrics.itemHeight + metrics.gapY) ) * metrics.columnsCount
+  const a = props.container.scrollTop - innerWrapper.value.offsetTop - 50;
+  const b = metrics.itemHeight + metrics.gapY;
 
-  if (Math.ceil(window.pageYOffset) >= bottomBound.value && lastEmitOn != bottomBound.value) {
+  offsetData.value = Math.floor(
+    a / b
+  ) * metrics.columnsCount
+
+  const reachedBottom = Math.ceil(props.container.scrollTop) >= bottomBound.value
+
+  if (reachedBottom && lastEmitOn !== bottomBound.value) {
     emitScrollEnd()
   }
 
-  if (window.pageYOffset < bottomBound.value && lastEmitOn == bottomBound.value) {
+  const isNotBottom = props.container.scrollTop < bottomBound.value;
+
+  if (isNotBottom && lastEmitOn === bottomBound.value) {
     lastEmitOn = 0
   }
 }
@@ -86,7 +106,9 @@ const emitScrollEnd = () => {
 }
 
 const wrapperHeight = computed(() => {
-  return Math.ceil(props.data.length / metrics.columnsCount) * (metrics.itemHeight + metrics.gapY) - metrics.gapY;
+  return Math.ceil(
+    props.data.length / metrics.columnsCount
+  ) * (metrics.itemHeight + metrics.gapY) - metrics.gapY;
 })
 
 const wrapperPadding = computed(() => {
@@ -98,13 +120,12 @@ const displayStart = computed(() => {
 })
 
 const displayEnd = computed(() => {
-  return  Math.min((displayStart.value + pageSize.value), (props.data.length))
+  return Math.min((displayStart.value + pageSize.value), (props.data.length))
 })
 
 const bottomBound = computed(() => {
-  return wrapper.value.offsetTop + wrapperHeight.value - metrics.viewportHeight
+  return innerWrapper.value.offsetTop + wrapperHeight.value - metrics.viewportHeight
 })
-
 
 defineExpose({
   reset
@@ -112,9 +133,11 @@ defineExpose({
 
 </script>
 
-
 <template>
-  <div ref="wrapper" :style="{ paddingTop: wrapperPadding + 'px', height: wrapperHeight + 'px'}">
+  <div ref="innerWrapper" :style="{
+    paddingTop: wrapperPadding + 'px',
+    height: wrapperHeight + 'px'
+  }">
     <div class="grid gridview" ref="grid">
       <div class="probe" ref="probe">
         <div ref="probeItem">
