@@ -20,6 +20,10 @@ const probeItem = ref(null)
 const probe = ref(null)
 const offsetData = ref(0)
 
+const containerResizeObserver = new ResizeObserver(() => {
+  reset();
+});
+
 const metrics = reactive({
   columnsCount: 0,
   itemWidth: 0,
@@ -34,13 +38,13 @@ var scrollLock = false
 
 onUnmounted(() => {
   props.container.removeEventListener('scroll', computeScrollData)
-  window.removeEventListener('resize', reset)
+  containerResizeObserver.disconnect()
 })
 
 onMounted(() => {
   setMetrics()
   props.container.addEventListener('scroll', computeScrollData)
-  window.addEventListener('resize', reset)
+  containerResizeObserver.observe(props.container);
 })
 
 const setMetrics = () => {
