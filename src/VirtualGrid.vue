@@ -76,7 +76,7 @@ const setMinPageSize = () => {
 const computeScrollData = () => {
   if (scrollLock) return;
 
-  const a = props.container.scrollTop - innerWrapper.value.offsetTop - 50;
+  const a = props.container.scrollTop; // - innerWrapper.value.offsetTop - 50;
   const b = metrics.itemHeight + metrics.gapY;
 
   offsetData.value = Math.floor(
